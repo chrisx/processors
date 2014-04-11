@@ -10,16 +10,16 @@ import java.io.File
 object Files {
   val TEMP_DIR_ATTEMPTS = 100
 
-  def mkTmpDir(prefix:String, deleteOnExit:Boolean):String = {
+  def mkTmpDir(prefix: String, deleteOnExit: Boolean): String = {
     val baseDir = new File(System.getProperty("java.io.tmpdir"))
 
     // to minimize collisions, the dir name contains the time and the thread id
     val baseName = prefix + "-" + System.nanoTime().toString + "-" + Thread.currentThread().getId + "-"
 
-    for(counter <- 0 until TEMP_DIR_ATTEMPTS) {
+    for (counter <- 0 until TEMP_DIR_ATTEMPTS) {
       val tempDir = new File(baseDir, baseName + counter.toString)
       if (tempDir.mkdir()) {
-        if(deleteOnExit) tempDir.deleteOnExit()
+        if (deleteOnExit) tempDir.deleteOnExit()
         // println("work dir: " + tempDir.getAbsolutePath)
         return tempDir.getAbsolutePath
       }

@@ -10,7 +10,7 @@ import edu.arizona.sista.processors.ling.TreebankLabels
  */
 object Trees {
 
-  def findBaseNounPhrases(root:Tree[String]):List[Tree[String]] = {
+  def findBaseNounPhrases(root: Tree[String]): List[Tree[String]] = {
     val bnpBuffer = new ListBuffer[Tree[String]]
     findBaseNounPhrases(root, bnpBuffer)
     bnpBuffer.toList
@@ -20,13 +20,13 @@ object Trees {
   private def findBaseNounPhrases(root: Tree[String], bnps: ListBuffer[Tree[String]]): Boolean = {
     var hasInnerBaseNPs = false
     root.children.foreach(_.foreach(c => {
-      if(findBaseNounPhrases(c, bnps) == true) {
+      if (findBaseNounPhrases(c, bnps) == true) {
         hasInnerBaseNPs = true
       }
     }))
 
     var isBaseNP = false
-    if(root.value == TreebankLabels.NP && ! hasInnerBaseNPs) {
+    if (root.value == TreebankLabels.NP && !hasInnerBaseNPs) {
       bnps += root
       isBaseNP = true
     }

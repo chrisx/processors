@@ -5,15 +5,15 @@ package edu.arizona.sista.processors.struct
  * User: mihais
  * Date: 3/18/13
  */
-class MutableNumber[T](var value:T) {
+class MutableNumber[T](var value: T) {
   override def hashCode = value.hashCode
 
-  override def equals(other:Any):Boolean = {
+  override def equals(other: Any): Boolean = {
     other match {
-      case that:MutableNumber[T] => value == that.value
-      case _ => false
+      case that: MutableNumber[T] => value == that.value
+      case _                      => false
     }
   }
 
-  override def toString:String = value.toString
+  override def toString: String = value.toString
 }

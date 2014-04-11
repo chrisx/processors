@@ -19,7 +19,7 @@ class Internalizer[T] {
    * @param t
    * @return
    */
-  def intern(t:T): T = {
+  def intern(t: T): T = {
     if (records.contains(t)) {
       savedObjects += 1
       records.get(t).get
@@ -35,5 +35,5 @@ class Internalizer[T] {
     println(" Saved objects: " + formatter.format((100.0 * savedObjects) / (savedObjects + records.size)) + "%")
   }
 
-  def clear(showStats:Boolean = false) { if(showStats) stats(); records.clear() }
+  def clear(showStats: Boolean = false) { if (showStats) stats(); records.clear() }
 }

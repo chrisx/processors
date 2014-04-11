@@ -103,14 +103,17 @@ public class ConfigurationDir  {
 		String mode = OptionManager.instance().getOptionValue(containerIndex, "config", "flowchart").toString().trim();
 		if (mode.equals("parse")) {
 			// During parsing also search for the MaltParser configuration file in the class path
-			File mcoPath = new File(workingDirectory.getPath()+File.separator+getName()+".mco");
+			// was throwing an exception (out of the box) - removed code below (searching for a .info file) and changed to look for mco file in current path
+			// instead of in workingDir - which was empty
+			//File mcoPath = new File(workingDirectory.getPath()+File.separator+getName()+".mco");
+			File mcoPath = new File(getName()+".mco");
+			System.out.println("mcoPath: " + mcoPath);
 			if (!mcoPath.exists()) {
 				String classpath = System.getProperty("java.class.path");
 
         // sista: if the above property is not set, read CLASSPATH from the system environment
         if(classpath == null || classpath.trim().length() == 0 || classpath.trim().equals("\"\""))
           classpath = System.getenv("CLASSPATH");
-
 				String[] items = classpath.split(System.getProperty("path.separator"));
 				boolean found = false;
 				for (String item : items) {
@@ -140,29 +143,29 @@ public class ConfigurationDir  {
         // sista: it is possible that model files are included in a jar with a different name
         // (this happens in the jar distribution of processors)
         // inspect all jars in the classpath, to see if any contains our model files
-        if(! found) {
-          String infoFile = getName() + File.separator + getName() + "_singlemalt.info";
-          InputStreamReader inputReader
-            = new InputStreamReader(this.getClass().getClassLoader().getResourceAsStream(infoFile));
-          if(inputReader != null) {
-            //System.out.println("FOUND in: " + this.getClass().getClassLoader().getResource(infoFile));
-            String path = this.getClass().getClassLoader().getResource(infoFile).toString();
-            int startFileName = path.indexOf("file:");
-            int endFileName = path.indexOf("!");
-            if(startFileName < 0 || endFileName < 0)
-              throw new RuntimeException("Invalid URL: " + path);
-            String jarFile = path.substring(startFileName + 5, endFileName);
-            //System.out.println("FOUND jar: " + jarFile);
-
-            try {
-              url = new File(jarFile).toURI().toURL();
-              found = true;
-            } catch (MalformedURLException e) {
-              // should never happen
-              throw new ConfigurationException("File path could not be represented as a URL.");
-            }
-          }
-        }
+//        if(! found) {
+//          String infoFile = getName() + File.separator + getName() + "_singlemalt.info";
+//          System.out.println("infoFile " + infoFile);
+//          InputStreamReader inputReader = new InputStreamReader(this.getClass().getClassLoader().getResourceAsStream(infoFile));
+//          if(inputReader != null) {
+//            //System.out.println("FOUND in: " + this.getClass().getClassLoader().getResource(infoFile));
+//            String path = this.getClass().getClassLoader().getResource(infoFile).toString();
+//            int startFileName = path.indexOf("file:");
+//            int endFileName = path.indexOf("!");
+//            if(startFileName < 0 || endFileName < 0)
+//              throw new RuntimeException("Invalid URL: " + path);
+//            String jarFile = path.substring(startFileName + 5, endFileName);
+//            //System.out.println("FOUND jar: " + jarFile);
+//
+//            try {
+//              url = new File(jarFile).toURI().toURL();
+//              found = true;
+//            } catch (MalformedURLException e) {
+//              // should never happen
+//              throw new ConfigurationException("File path could not be represented as a URL.");
+//            }
+//          }
+//        }
         // end sista block
 
 				if (found == false) {

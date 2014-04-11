@@ -10,8 +10,8 @@ import scala.collection.mutable.ArrayBuffer
  */
 object TrainMalt {
 
-  def main(args:Array[String]) {
-    if(args.length != 2) {
+  def main(args: Array[String]) {
+    if (args.length != 2) {
       println("Usage: edu.arizona.sista.processor.fastnlp.TrainMalt <training file> <model name>")
       System.exit(1)
     }
@@ -23,7 +23,7 @@ object TrainMalt {
     println(s"Training completed. Model file saved in $modelName")
   }
 
-  def mkArgs(trainFile:String, modelName:String):Array[String] = {
+  def mkArgs(trainFile: String, modelName: String): Array[String] = {
     val args = new ArrayBuffer[String]()
 
     args += "-m"

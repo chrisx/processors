@@ -2,9 +2,9 @@ package edu.arizona.sista.processors
 
 import java.io._
 import edu.arizona.sista.processors.DocumentSerializer._
-import collection.mutable.{ListBuffer, ArrayBuffer}
+import collection.mutable.{ ListBuffer, ArrayBuffer }
 import collection.mutable
-import edu.arizona.sista.processors.struct.{Tree, MutableNumber, DirectedGraphEdgeIterator, DirectedGraph}
+import edu.arizona.sista.processors.struct.{ Tree, MutableNumber, DirectedGraphEdgeIterator, DirectedGraph }
 
 /**
  * Saves/loads a Document to/from a stream
@@ -15,35 +15,35 @@ import edu.arizona.sista.processors.struct.{Tree, MutableNumber, DirectedGraphEd
  */
 class DocumentSerializer {
 
-  def load(is:InputStream): Document = {
+  def load(is: InputStream): Document = {
     val r = new BufferedReader(new InputStreamReader(is))
     var bits = read(r)
     assert(bits(0) == START_SENTENCES)
     val sentCount = bits(1).toInt
     val sents = new ArrayBuffer[Sentence]
     var offset = 0
-    while(offset < sentCount) {
+    while (offset < sentCount) {
       sents += loadSentence(r)
       offset += 1
     }
-    var coref:Option[CorefChains] = None
+    var coref: Option[CorefChains] = None
     do {
       bits = read(r)
       if (bits(0) == START_COREF) {
         coref = Some(loadCoref(r, bits(1).toInt))
       }
-    } while(bits(0) != END_OF_DOCUMENT)
+    } while (bits(0) != END_OF_DOCUMENT)
     new Document(sents.toArray, coref)
   }
 
-  private def read(r:BufferedReader): Array[String] = {
+  private def read(r: BufferedReader): Array[String] = {
     val line = r.readLine()
     // println("READ LINE: [" + line + "]")
     if (line.length == 0) return new Array[String](0)
     line.split(SEP)
   }
 
-  def load(s:String, encoding:String = "ISO-8859-1"): Document = {
+  def load(s: String, encoding: String = "ISO-8859-1"): Document = {
     // println("Parsing annotation:\n" + s)
     val is = new ByteArrayInputStream(s.getBytes(encoding))
     val doc = load(is)
@@ -51,7 +51,7 @@ class DocumentSerializer {
     doc
   }
 
-  private def loadSentence(r:BufferedReader): Sentence = {
+  private def loadSentence(r: BufferedReader): Sentence = {
     var bits = read(r)
     assert(bits(0) == START_TOKENS)
     val tokenCount = bits(1).toInt
@@ -69,7 +69,7 @@ class DocumentSerializer {
     val chunkBuffer = new ArrayBuffer[String]
     var nilChunks = true
     var offset = 0
-    while(offset < tokenCount) {
+    while (offset < tokenCount) {
       bits = read(r)
       assert(bits.length == 8)
       wordBuffer += bits(0)
@@ -97,8 +97,8 @@ class DocumentSerializer {
     assert(normBuffer.size == 0 || normBuffer.size == tokenCount)
     assert(chunkBuffer.size == 0 || chunkBuffer.size == tokenCount)
 
-    var deps:Option[DirectedGraph[String]] = None
-    var tree:Option[Tree[String]] = None
+    var deps: Option[DirectedGraph[String]] = None
+    var tree: Option[Tree[String]] = None
     do {
       bits = read(r)
       if (bits(0) == START_DEPENDENCIES) {
@@ -108,7 +108,7 @@ class DocumentSerializer {
         bits = read(r)
         tree = Some(loadTree(bits, position))
       }
-    } while(bits(0) != END_OF_SENTENCE)
+    } while (bits(0) != END_OF_SENTENCE)
 
     new Sentence(
       wordBuffer.toArray,
@@ -119,16 +119,15 @@ class DocumentSerializer {
       bufferOption(entityBuffer, nilEntities),
       bufferOption(normBuffer, nilNorms),
       bufferOption(chunkBuffer, nilChunks),
-      tree, deps
-    )
+      tree, deps, None, false)
   }
 
-  private def loadDependencies(r:BufferedReader):DirectedGraph[String] = {
+  private def loadDependencies(r: BufferedReader): DirectedGraph[String] = {
     val edges = new ListBuffer[(Int, Int, String)]
     val roots = new mutable.HashSet[Int]()
     var bits = read(r)
     var offset = 0
-    while(offset < bits.length) {
+    while (offset < bits.length) {
       roots.add(bits(offset).toInt)
       offset += 1
     }
@@ -139,24 +138,24 @@ class DocumentSerializer {
         //println("adding edge: " + edge)
         edges += edge
       }
-    } while(bits(0) != END_OF_DEPENDENCIES)
+    } while (bits(0) != END_OF_DEPENDENCIES)
     val dg = new DirectedGraph[String](edges.toList, roots.toSet)
     //println(dg)
     dg
   }
 
-  private def bufferOption[T: ClassManifest](b:ArrayBuffer[T], allNils:Boolean): Option[Array[T]] = {
+  private def bufferOption[T: ClassManifest](b: ArrayBuffer[T], allNils: Boolean): Option[Array[T]] = {
     if (b.size == 0) return None
     if (allNils) return None
     Some(b.toArray)
   }
 
-  def save(doc:Document, os:PrintWriter) {
+  def save(doc: Document, os: PrintWriter) {
     os.println(START_SENTENCES + SEP + doc.sentences.length)
     for (s <- doc.sentences) {
       saveSentence(s, os)
     }
-    if (! doc.coreferenceChains.isEmpty) {
+    if (!doc.coreferenceChains.isEmpty) {
       val mentionCount = doc.coreferenceChains.get.getMentions.size
       os.println(START_COREF + SEP + mentionCount)
       doc.coreferenceChains.foreach(g => saveCoref(g, os))
@@ -164,7 +163,7 @@ class DocumentSerializer {
     os.println(END_OF_DOCUMENT)
   }
 
-  def save(doc:Document, encoding:String = "ISO-8859-1"): String = {
+  def save(doc: Document, encoding: String = "ISO-8859-1"): String = {
     val byteOutput = new ByteArrayOutputStream
     val os = new PrintWriter(byteOutput)
     save(doc, os)
@@ -174,37 +173,37 @@ class DocumentSerializer {
     byteOutput.toString(encoding)
   }
 
-  private def saveSentence(sent:Sentence, os:PrintWriter) {
+  private def saveSentence(sent: Sentence, os: PrintWriter) {
     os.println(START_TOKENS + SEP + sent.size)
     var offset = 0
-    while(offset < sent.size) {
+    while (offset < sent.size) {
       saveToken(sent, offset, os)
       offset += 1
     }
-    if (! sent.dependencies.isEmpty) {
+    if (!sent.dependencies.isEmpty) {
       os.println(START_DEPENDENCIES + SEP + sent.dependencies.size)
       sent.dependencies.foreach(g => saveDependencies(g, os))
     }
-    if (! sent.syntacticTree.isEmpty) {
+    if (!sent.syntacticTree.isEmpty) {
       os.println(START_CONSTITUENTS + SEP + "1")
       sent.syntacticTree.foreach(t => { saveTree(t, os); os.println() })
     }
     os.println(END_OF_SENTENCE)
   }
 
-  private def saveTree(tree:Tree[String], os:PrintWriter) {
+  private def saveTree(tree: Tree[String], os: PrintWriter) {
     os.print(tree.value + SEP + tree.head + SEP + tree.startOffset + SEP + tree.endOffset + SEP)
     if (tree.children == None) os.print(0)
     else os.print(tree.children.get.length)
-    if (! tree.isLeaf) {
-      for(c <- tree.children.get) {
+    if (!tree.isLeaf) {
+      for (c <- tree.children.get) {
         os.print(SEP)
         saveTree(c, os)
       }
     }
   }
 
-  private def loadTree(bits:Array[String], position:MutableNumber[Int]):Tree[String] = {
+  private def loadTree(bits: Array[String], position: MutableNumber[Int]): Tree[String] = {
     val value = bits(position.value)
     val head = bits(position.value + 1).toInt
     val startOffset = bits(position.value + 2).toInt
@@ -224,7 +223,7 @@ class DocumentSerializer {
     new Tree[String](value, Some(children), head, startOffset, endOffset)
   }
 
-  private def saveToken(sent:Sentence, offset:Int, os:PrintWriter) {
+  private def saveToken(sent: Sentence, offset: Int, os: PrintWriter) {
     os.print(sent.words(offset) + SEP +
       sent.startOffsets(offset) + SEP +
       sent.endOffsets(offset))
@@ -252,29 +251,29 @@ class DocumentSerializer {
     os.println()
   }
 
-  private def saveDependencies(dg:DirectedGraph[String], os:PrintWriter) {
+  private def saveDependencies(dg: DirectedGraph[String], os: PrintWriter) {
     os.println(dg.roots.mkString(sep = SEP))
     val it = new DirectedGraphEdgeIterator[String](dg)
-    while(it.hasNext) {
+    while (it.hasNext) {
       val edge = it.next()
       os.println(edge._1 + SEP + edge._2 + SEP + edge._3)
     }
     os.println(END_OF_DEPENDENCIES)
   }
 
-  private def saveCoref(cg:CorefChains, os:PrintWriter) {
+  private def saveCoref(cg: CorefChains, os: PrintWriter) {
     val mentions = cg.getMentions
     for (m <- mentions) {
       os.println(
         m.sentenceIndex + SEP +
-        m.headIndex + SEP +
-        m.startOffset + SEP +
-        m.endOffset + SEP +
-        m.chainId)
+          m.headIndex + SEP +
+          m.startOffset + SEP +
+          m.endOffset + SEP +
+          m.chainId)
     }
   }
 
-  private def loadCoref(r:BufferedReader, mentionCount:Int): CorefChains = {
+  private def loadCoref(r: BufferedReader, mentionCount: Int): CorefChains = {
     val mb = new ListBuffer[CorefMention]
     for (i <- 0 until mentionCount) {
       val bits = read(r)

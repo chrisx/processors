@@ -1,9 +1,9 @@
 package edu.arizona.sista.processors.corenlp
 
 import edu.arizona.sista.processors._
-import edu.stanford.nlp.pipeline.{StanfordCoreNLP,Annotation}
+import edu.stanford.nlp.pipeline.{ StanfordCoreNLP, Annotation }
 import java.util.Properties
-import collection.mutable.{ListBuffer, ArrayBuffer}
+import collection.mutable.{ ListBuffer, ArrayBuffer }
 import edu.stanford.nlp.ling.CoreAnnotations._
 import scala.collection.JavaConversions._
 import edu.stanford.nlp.util.CoreMap
@@ -15,14 +15,14 @@ import edu.stanford.nlp.dcoref.CorefCoreAnnotations.CorefChainAnnotation
 import edu.stanford.nlp.trees.TreeCoreAnnotations.TreeAnnotation
 import edu.stanford.nlp.trees.SemanticHeadFinder
 import edu.stanford.nlp.semgraph.SemanticGraphCoreAnnotations
-import edu.arizona.sista.processors.struct.{Tree, MutableNumber, DirectedGraph}
+import edu.arizona.sista.processors.struct.{ Tree, MutableNumber, DirectedGraph }
 
 /**
  * API for Stanford's CoreNLP tools
  * User: mihais
  * Date: 3/1/13
  */
-class CoreNLPProcessor(val internStrings:Boolean = true) extends Processor {
+class CoreNLPProcessor(val internStrings: Boolean = true) extends Processor {
   lazy val tokenizerWithoutSentenceSplitting = mkTokenizerWithoutSentenceSplitting
   lazy val tokenizerWithSentenceSplitting = mkTokenizerWithSentenceSplitting
   lazy val posTagger = mkPosTagger
@@ -74,7 +74,7 @@ class CoreNLPProcessor(val internStrings:Boolean = true) extends Processor {
     new StanfordCoreNLP(props, false)
   }
 
-  def mkDocument(text:String): Document = {
+  def mkDocument(text: String): Document = {
     val annotation = new Annotation(text)
     tokenizerWithSentenceSplitting.annotate(annotation)
     val sas = annotation.get(classOf[SentencesAnnotation])
@@ -87,7 +87,7 @@ class CoreNLPProcessor(val internStrings:Boolean = true) extends Processor {
     new CoreNLPDocument(sentences, Some(annotation))
   }
 
-  def mkSentence(annotation:CoreMap): Sentence = {
+  def mkSentence(annotation: CoreMap): Sentence = {
     val tas = annotation.get(classOf[TokensAnnotation])
 
     val wordBuffer = new ArrayBuffer[String]
@@ -106,18 +106,18 @@ class CoreNLPProcessor(val internStrings:Boolean = true) extends Processor {
       endOffsetBuffer.toArray)
   }
 
-  def in(s:String):String = {
+  def in(s: String): String = {
     if (internStrings) Processor.internString(s)
     else s
   }
 
-  def arrayOrNone[T: ClassManifest](b:ArrayBuffer[T]): Option[Array[T]] = {
+  def arrayOrNone[T: ClassManifest](b: ArrayBuffer[T]): Option[Array[T]] = {
     if (b.size > 0) new Some[Array[T]](b.toArray)
     else None
   }
 
-  def mkDocumentFromSentences(sentences:Iterable[String],
-                              charactersBetweenSentences:Int = 1): Document = {
+  def mkDocumentFromSentences(sentences: Iterable[String],
+                              charactersBetweenSentences: Int = 1): Document = {
     val docAnnotation = new Annotation(sentences.mkString(mkSep(charactersBetweenSentences)))
     val sentencesAnnotation = new util.ArrayList[CoreMap]()
     docAnnotation.set(classOf[SentencesAnnotation], sentencesAnnotation.asInstanceOf[java.util.List[CoreMap]])
@@ -126,10 +126,10 @@ class CoreNLPProcessor(val internStrings:Boolean = true) extends Processor {
     var sentOffset = 0
     var charOffset = 0
     var tokenOffset = 0
-    for(sentence <- sentences) {
+    for (sentence <- sentences) {
       val tmpAnnotation = new Annotation(sentence)
       tokenizerWithoutSentenceSplitting.annotate(tmpAnnotation)
-      val crtTokens:java.util.List[CoreLabel] =
+      val crtTokens: java.util.List[CoreLabel] =
         tmpAnnotation.get(classOf[TokensAnnotation])
 
       // construct a proper sentence, with token and character offsets adjusted to make the entire document consistent
@@ -139,7 +139,7 @@ class CoreNLPProcessor(val internStrings:Boolean = true) extends Processor {
       tokenOffset += crtTokens.size()
       crtSent.set(classOf[TokenEndAnnotation], new Integer(tokenOffset))
       var i = 0
-      while(i < crtTokens.size()) {
+      while (i < crtTokens.size()) {
         val crtTok = crtTokens.get(i)
         crtTok.setBeginPosition(crtTok.beginPosition() + charOffset)
         crtTok.setEndPosition(crtTok.endPosition() + charOffset)
@@ -156,15 +156,15 @@ class CoreNLPProcessor(val internStrings:Boolean = true) extends Processor {
     new CoreNLPDocument(docSents, Some(docAnnotation))
   }
 
-  private def mkSep(size:Int):String = {
+  private def mkSep(size: Int): String = {
     val os = new mutable.StringBuilder
     for (i <- 0 until size) os.append(" ")
     os.toString()
   }
 
-  def mkDocumentFromTokens(sentences:Iterable[Iterable[String]],
-                           charactersBetweenSentences:Int = 1,
-                           charactersBetweenTokens:Int = 1): Document = {
+  def mkDocumentFromTokens(sentences: Iterable[Iterable[String]],
+                           charactersBetweenSentences: Int = 1,
+                           charactersBetweenTokens: Int = 1): Document = {
     val sb = new ListBuffer[String]
     for (s <- sentences)
       sb += s.mkString(mkSep(charactersBetweenTokens))
@@ -177,8 +177,8 @@ class CoreNLPProcessor(val internStrings:Boolean = true) extends Processor {
     var sentOffset = 0
     var charOffset = 0
     var tokenOffset = 0
-    for(sentence <- sentences) {
-      val crtTokens:util.List[CoreLabel] = new util.ArrayList[CoreLabel]()
+    for (sentence <- sentences) {
+      val crtTokens: util.List[CoreLabel] = new util.ArrayList[CoreLabel]()
       var tokOffset = 0
       for (w <- sentence) {
         val crtTok = new CoreLabel()
@@ -205,7 +205,7 @@ class CoreNLPProcessor(val internStrings:Boolean = true) extends Processor {
     new CoreNLPDocument(docSents, Some(docAnnotation))
   }
 
-  def basicSanityCheck(doc:Document): Option[Annotation] = {
+  def basicSanityCheck(doc: Document): Option[Annotation] = {
     if (doc.sentences == null)
       throw new RuntimeException("ERROR: Document.sentences == null!")
     if (doc.sentences.size == 0) return None
@@ -216,7 +216,7 @@ class CoreNLPProcessor(val internStrings:Boolean = true) extends Processor {
     Some(annotation)
   }
 
-  def tagPartsOfSpeech(doc:Document) {
+  def tagPartsOfSpeech(doc: Document) {
     val annotation = basicSanityCheck(doc)
     if (annotation.isEmpty) return
 
@@ -236,7 +236,7 @@ class CoreNLPProcessor(val internStrings:Boolean = true) extends Processor {
     }
   }
 
-  def lemmatize(doc:Document) {
+  def lemmatize(doc: Document) {
     val annotation = basicSanityCheck(doc)
     if (annotation.isEmpty) return
     if (doc.sentences.head.tags == None)
@@ -257,7 +257,7 @@ class CoreNLPProcessor(val internStrings:Boolean = true) extends Processor {
     }
   }
 
-  def recognizeNamedEntities(doc:Document) {
+  def recognizeNamedEntities(doc: Document) {
     val annotation = basicSanityCheck(doc)
     if (annotation.isEmpty) return
     if (doc.sentences.head.tags == None)
@@ -268,7 +268,7 @@ class CoreNLPProcessor(val internStrings:Boolean = true) extends Processor {
     try {
       ner.annotate(annotation.get)
     } catch {
-      case e:Exception => {
+      case e: Exception => {
         println("Caught NER exception!")
         println("Document:\n" + doc)
         throw e
@@ -294,13 +294,25 @@ class CoreNLPProcessor(val internStrings:Boolean = true) extends Processor {
     }
   }
 
-  def parse(doc:Document) {
+  // multi-threaded version (basically to pass in a Seq of Annotations - the underlying
+  // StanfordCoreNLP api uses multiple threads in that instance only.
+  // The FastNLPProcessor ended up being much faster.
+  //  def parse(doc: Document, annotations: Seq[Annotation]) {
+  //    parser.annotate(annotations)
+  //    val sas = annotations.map(_.get(classOf[SentencesAnnotation])).flatMap(a => a)
+  //    _parse(sas, doc)
+  //  }
+
+  def parse(doc: Document) {
     val annotation = basicSanityCheck(doc)
     if (annotation.isEmpty) return
-
     parser.annotate(annotation.get)
 
     val sas = annotation.get.get(classOf[SentencesAnnotation])
+    _parse(sas, doc)
+  }
+
+  def _parse(sas: Seq[CoreMap], doc: Document) = {
     var offset = 0
     for (sa <- sas) {
       //
@@ -319,8 +331,8 @@ class CoreNLPProcessor(val internStrings:Boolean = true) extends Processor {
       val da = sa.get(classOf[SemanticGraphCoreAnnotations.CollapsedCCProcessedDependenciesAnnotation])
       val edges = da.getEdgeSet
       for (edge <- edges) {
-        val head:Int = edge.getGovernor.get(classOf[IndexAnnotation])
-        val modifier:Int = edge.getDependent.get(classOf[IndexAnnotation])
+        val head: Int = edge.getGovernor.get(classOf[IndexAnnotation])
+        val modifier: Int = edge.getDependent.get(classOf[IndexAnnotation])
         var label = edge.getRelation.getShortName
         val spec = edge.getRelation.getSpecific
         if (spec != null) label = label + "_" + spec
@@ -333,15 +345,15 @@ class CoreNLPProcessor(val internStrings:Boolean = true) extends Processor {
       }
 
       val dg = new DirectedGraph[String](edgeBuffer.toList, roots.toSet)
-      //println(dg)
+
       doc.sentences(offset).dependencies = Some(dg)
       offset += 1
     }
   }
 
   private def toTree(
-    stanfordTree:edu.stanford.nlp.trees.Tree,
-    position:MutableNumber[Int]):Tree[String] = {
+    stanfordTree: edu.stanford.nlp.trees.Tree,
+    position: MutableNumber[Int]): Tree[String] = {
     assert(stanfordTree != null)
 
     if (stanfordTree.isLeaf) {
@@ -366,7 +378,7 @@ class CoreNLPProcessor(val internStrings:Boolean = true) extends Processor {
     val headDaughter = headFinder.determineHead(stanfordTree)
     var head = -1
     var i = 0
-    while(i < stanfordTree.numChildren() && head == -1) {
+    while (i < stanfordTree.numChildren() && head == -1) {
       if (headDaughter == stanfordTree.getChild(i)) {
         head = i
       }
@@ -376,15 +388,15 @@ class CoreNLPProcessor(val internStrings:Boolean = true) extends Processor {
     new Tree[String](value, Some(children), head, start, end)
   }
 
-  def chunking(doc:Document) {
+  def chunking(doc: Document) {
     // CoreNLP does not have shallow parsing
   }
 
-  def labelSemanticRoles(doc:Document) {
+  def labelSemanticRoles(doc: Document) {
     // CoreNLP does not have SRL
   }
 
-  def resolveCoreference(doc:Document) {
+  def resolveCoreference(doc: Document) {
     val annotation = basicSanityCheck(doc)
     if (annotation.isEmpty) return
 
@@ -394,7 +406,7 @@ class CoreNLPProcessor(val internStrings:Boolean = true) extends Processor {
       throw new RuntimeException("ERROR: you have to run the lemmatizer before coreference resolution!")
     if (doc.sentences.head.entities == None)
       throw new RuntimeException("ERROR: you have to run the NER before coreference resolution!")
-    if(doc.sentences.head.dependencies == None)
+    if (doc.sentences.head.dependencies == None)
       throw new RuntimeException("ERROR: you have to run the parser before coreference resolution!")
 
     coref.annotate(annotation.get)

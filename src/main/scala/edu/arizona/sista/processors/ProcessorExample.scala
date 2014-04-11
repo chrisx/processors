@@ -10,9 +10,9 @@ import edu.arizona.sista.processors.fastnlp.FastNLPProcessor
  * Date: 3/28/13
  */
 object ProcessorExample {
-  def main(args:Array[String]) {
+  def main(args: Array[String]) {
     // create the processor
-    val proc:Processor = new CoreNLPProcessor()
+    val proc: Processor = new CoreNLPProcessor()
 
     // for much faster processing, use FastNLPProcessor
     // this processor does not support constituent parsing and coreference resolution, and
@@ -41,7 +41,7 @@ object ProcessorExample {
       sentence.dependencies.foreach(dependencies => {
         println("Syntactic dependencies:")
         val iterator = new DirectedGraphEdgeIterator[String](dependencies)
-        while(iterator.hasNext) {
+        while (iterator.hasNext) {
           val dep = iterator.next
           // note that we use offsets starting at 0 (unlike CoreNLP, which uses offsets starting at 1)
           println(" head:" + dep._1 + " modifier:" + dep._2 + " label:" + dep._3)

@@ -12,8 +12,8 @@ import java.io.File
 object EvaluateMalt {
   val OUT_FILE = "malt.out"
 
-  def main(args:Array[String]) {
-    if(args.length != 2) {
+  def main(args: Array[String]) {
+    if (args.length != 2) {
       println("Usage: edu.arizona.sista.processor.fastnlp.TrainMalt <model name> <testing file>")
       System.exit(1)
     }
@@ -34,15 +34,15 @@ object EvaluateMalt {
     println(s"UAS = $uas")
   }
 
-  def score(goldDeps:Array[Dependency], sysDeps:Array[Dependency]):(Double, Double) = {
+  def score(goldDeps: Array[Dependency], sysDeps: Array[Dependency]): (Double, Double) = {
     var correctLabeled = 0
     var correctUnlabeled = 0
-    for(i <- 0 until goldDeps.size) {
+    for (i <- 0 until goldDeps.size) {
       val g = goldDeps(i)
       val s = sysDeps(i)
-      if(g.head == s.head) {
+      if (g.head == s.head) {
         correctUnlabeled += 1
-        if(g.label == s.label)
+        if (g.label == s.label)
           correctLabeled += 1
       }
     }
@@ -52,13 +52,13 @@ object EvaluateMalt {
     (las, uas)
   }
 
-  def readDependencies(fn:String):Array[Dependency] = {
+  def readDependencies(fn: String): Array[Dependency] = {
     val deps = new ArrayBuffer[Dependency]()
-    for(line <- io.Source.fromFile(fn).getLines()) {
+    for (line <- io.Source.fromFile(fn).getLines()) {
       val content = line.trim
-      if(content.length > 0) {
+      if (content.length > 0) {
         val tokens = content.split("\\s+")
-        if(tokens.size < 8)
+        if (tokens.size < 8)
           throw new RuntimeException(s"ERROR: invalid output line in file $fn: $line")
         val label = tokens(7)
         val head = tokens(6).toInt
@@ -68,7 +68,7 @@ object EvaluateMalt {
     deps.toArray
   }
 
-  def mkArgs(modelName:String, testFile:String, outFile:String):Array[String] = {
+  def mkArgs(modelName: String, testFile: String, outFile: String): Array[String] = {
     val args = new ArrayBuffer[String]()
 
     args += "-m"
@@ -78,7 +78,7 @@ object EvaluateMalt {
     args += "liblinear"
 
     val lastSep = modelName.lastIndexOf(File.separator)
-    if(lastSep == -1) {
+    if (lastSep == -1) {
       args += "-w"
       args += "."
       args += "-c"
@@ -108,11 +108,11 @@ object EvaluateMalt {
     args.toArray
   }
 
-  private def trimMco(s:String):String = {
-    if(s.endsWith(".mco"))
+  private def trimMco(s: String): String = {
+    if (s.endsWith(".mco"))
       return s.substring(0, s.length - 4)
     s
   }
 }
 
-class Dependency(val label:String, val head:Int)
+class Dependency(val label: String, val head: Int)

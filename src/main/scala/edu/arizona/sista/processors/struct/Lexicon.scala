@@ -22,7 +22,7 @@ class Lexicon[T] extends Serializable {
    * @param s
    * @return
    */
-  def add(s:T):Int = {
+  def add(s: T): Int = {
     if (lexicon.contains(s)) {
       savedMemory += 1
       lexicon.get(s).get
@@ -34,7 +34,7 @@ class Lexicon[T] extends Serializable {
     }
   }
 
-  def exists(i:Int):Boolean = (i < index.size)
+  def exists(i: Int): Boolean = (i < index.size)
 
   /**
    * Fetches the string with the given index from the lexicon
@@ -43,15 +43,15 @@ class Lexicon[T] extends Serializable {
    * @param i Index of the string in the lexicon
    * @return The string corresponding to the index
    */
-  def get(i:Int):T = index(i)
+  def get(i: Int): T = index(i)
 
-  def get(w:T):Option[Int] = lexicon.get(w)
+  def get(w: T): Option[Int] = lexicon.get(w)
 
   def size = lexicon.size
 
-  override def toString:String = {
+  override def toString: String = {
     val os = new StringBuilder
-    for(w <- lexicon.keySet) {
+    for (w <- lexicon.keySet) {
       os.append(w + " -> " + lexicon.get(w) + "\n")
     }
     os.toString()
@@ -64,7 +64,7 @@ class Lexicon[T] extends Serializable {
     logger.info(" Saved objects: " + savedMemory + " (" + (100.0 * savedMemory / (savedMemory + lexicon.size)) + "%)")
   }
 
-  def saveTo[F](fileName:String) {
+  def saveTo[F](fileName: String) {
     val os = new ObjectOutputStream(new FileOutputStream(fileName))
     os.writeObject(this)
     os.close()
@@ -75,17 +75,17 @@ object Lexicon {
   val logger = LoggerFactory.getLogger(classOf[Lexicon[String]])
 
   /** Copy constructor for Lexicon */
-  def apply[T](other:Lexicon[T]):Lexicon[T] = {
+  def apply[T](other: Lexicon[T]): Lexicon[T] = {
     val lex = new Lexicon[T]
-    for(w <- other.lexicon.keySet)
+    for (w <- other.lexicon.keySet)
       lex.lexicon += w -> other.lexicon.get(w).get
-    for(i <- 0 until other.index.size)
+    for (i <- 0 until other.index.size)
       lex.index += other.index(i)
     lex
   }
 
   /** Loads a lexicon saved by Lexicon.saveTo */
-  def loadFrom[F](fileName:String):Lexicon[F] = {
+  def loadFrom[F](fileName: String): Lexicon[F] = {
     val is = new ObjectInputStream(new FileInputStream(fileName))
     val c = is.readObject().asInstanceOf[Lexicon[F]]
     is.close()
