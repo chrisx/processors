@@ -17,12 +17,14 @@ import edu.stanford.nlp.trees.SemanticHeadFinder
 import edu.stanford.nlp.semgraph.SemanticGraphCoreAnnotations
 import edu.arizona.sista.processors.struct.{ Tree, MutableNumber, DirectedGraph }
 
+import edu.arizona.sista.processors.fastnlp.TimeX
+
 /**
  * API for Stanford's CoreNLP tools
  * User: mihais
  * Date: 3/1/13
  */
-class CoreNLPProcessor(val internStrings: Boolean = true) extends Processor {
+class CoreNLPProcessor(val internStrings: Boolean = true) extends Processor with TimeX {
   lazy val tokenizerWithoutSentenceSplitting = mkTokenizerWithoutSentenceSplitting
   lazy val tokenizerWithSentenceSplitting = mkTokenizerWithSentenceSplitting
   lazy val posTagger = mkPosTagger
@@ -47,6 +49,14 @@ class CoreNLPProcessor(val internStrings: Boolean = true) extends Processor {
   def mkPosTagger: StanfordCoreNLP = {
     val props = new Properties()
     props.put("annotators", "pos")
+    val MAX_ACTORS = 6
+    lazy val nThreads = {
+      val p = Runtime.getRuntime.availableProcessors
+      if (p > MAX_ACTORS) MAX_ACTORS else p
+    }
+
+    //props.put("nthreads", nThreads.toString)
+    println("====================================================================== creating StanfordCoreNLP.... " + nThreads.toString + " threads")
     new StanfordCoreNLP(props, false)
   }
 
@@ -219,9 +229,7 @@ class CoreNLPProcessor(val internStrings: Boolean = true) extends Processor {
   def tagPartsOfSpeech(doc: Document) {
     val annotation = basicSanityCheck(doc)
     if (annotation.isEmpty) return
-
-    posTagger.annotate(annotation.get)
-
+    timeX(posTagger.annotate(annotation.get), "CoreNLPProcessor.tagPartsOfSpeech") // 4s
     // convert CoreNLP Annotations to our data structures
     val sas = annotation.get.get(classOf[SentencesAnnotation])
     var offset = 0
@@ -229,7 +237,7 @@ class CoreNLPProcessor(val internStrings: Boolean = true) extends Processor {
       val tb = new ArrayBuffer[String]
       val tas = sa.get(classOf[TokensAnnotation])
       for (ta <- tas) {
-        tb += in(ta.tag())
+        tb += in(ta.tag)
       }
       doc.sentences(offset).tags = Some(tb.toArray)
       offset += 1

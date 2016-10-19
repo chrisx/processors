@@ -113,7 +113,7 @@ public class MaltParserService {
 		singleMalt.getConfigurationDir().initDataFormat();
 		dataFormatInstance = singleMalt.getConfigurationDir().getDataFormatManager().getInputDataFormatSpec().createDataFormatInstance(
 				singleMalt.getSymbolTables(),
-				OptionManager.instance().getOptionValueString(optionContainer, "singlemalt", "null_value")); 
+				OptionManager.instance().getOptionValueString(optionContainer, "singlemalt", "null_value"));
 		initialized = true;
 	}
 	

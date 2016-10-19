@@ -1,9 +1,10 @@
 package org.maltparserx.core.helper;
 
-import org.apache.log4j.ConsoleAppender;
-import org.apache.log4j.Level;
-import org.apache.log4j.Logger;
-import org.apache.log4j.PatternLayout;
+import org.apache.logging.log4j.core.appender.ConsoleAppender;
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+//import org.apache.logging.log4j.core.layout.PatternLayout;
 
 /**
 *
@@ -14,14 +15,22 @@ public class SystemLogger {
 	private static SystemLogger uniqueInstance = new SystemLogger();
 	private static Logger systemLogger;
 	private Level systemVerbosityLevel;
-	private ConsoleAppender consoleAppender;
+	//private ConsoleAppender consoleAppender;
 	
 	private SystemLogger() { 
-		systemLogger = Logger.getLogger("System");
+		systemLogger = LogManager.getLogger("System");
 		/* System verbosity (Standard Out) */
-		consoleAppender = new ConsoleAppender(new PatternLayout("%m"), ConsoleAppender.SYSTEM_ERR);
-		consoleAppender.setEncoding("UTF-16");
-		systemLogger.addAppender(consoleAppender);
+		//consoleAppender = new ConsoleAppender(new PatternLayout("%m"), ConsoleAppender.SYSTEM_ERR);
+		
+		//PatternLayout pb = PatternLayout.createDefaultLayout();
+//		PatternLayout pb = PatternLayout.newBuilder().withPattern("%m").build();
+//		consoleAppender = ConsoleAppender.createAppender(pb, null, "System.err", "console", null, null);
+				
+//				new ConsoleAppender(pb, "System.err");
+//		consoleAppender.setEncoding("UTF-16");
+		
+		
+		//systemLogger.addAppender(consoleAppender, null, null);
 		if (System.getProperty("Malt.verbosity") != null) {
 			setSystemVerbosityLevel(System.getProperty("Malt.verbosity").toUpperCase());
 		} else {
@@ -59,7 +68,7 @@ public class SystemLogger {
 	 */
 	public void setSystemVerbosityLevel(String verbosity) {
 		this.systemVerbosityLevel = Level.toLevel(verbosity, Level.INFO);
-		consoleAppender.setThreshold(systemVerbosityLevel);
-		systemLogger.setLevel(systemVerbosityLevel);
+		//consoleAppender.setThreshold(systemVerbosityLevel);
+		//systemLogger.setLevel(systemVerbosityLevel);
 	}
 }

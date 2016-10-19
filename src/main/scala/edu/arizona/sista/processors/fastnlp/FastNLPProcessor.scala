@@ -18,15 +18,68 @@ import org.maltparserx
  * User: mihais
  * Date: 1/4/14
  */
-class FastNLPProcessor(internStrings: Boolean = true) extends CoreNLPProcessor(internStrings) {
+
+import akka.actor._
+import akka.routing._
+import scala.concurrent.Await
+import scala.concurrent.duration._
+import akka.pattern.ask
+import akka.util.Timeout
+
+class MPActor extends Actor with TimeX {
+  println("Loaded MPActor")
+  private def mkArgs(workDir: String, modelName: String): String = {
+    val args = new ArrayBuffer[String]()
+    args += "-m"
+    args += "parse"
+    args += "-w"
+    args += workDir
+    args += "-c"
+    args += modelName
+    args += "-v"
+    args += "error"
+    args.mkString(" ")
+  }
+  lazy val args = mkArgs(Files.mkTmpDir("maltwdir-" + System.nanoTime, deleteOnExit = true), DEFAULT_MODEL_NAME)
+  val maltService = {
+    val service = timeX(new MaltParserService, "new MaltParserService")
+    timeX(service.initializeParserModel(args), "s.initializeParserModel(args)")
+    service
+  }
+
+  def receive = {
+    case tokens: Array[String] =>
+      //println("MPActor received tokens: " + tokens.size)
+      val parsed: Array[String] = timeX(maltService.parseTokens(tokens), "maltService.parseTokens(tokens)")
+      //println("MPActor parsed: " + parsed.size + " replying")
+      sender ! parsed
+    case m => println("Unknown message: " + m)
+  }
+
+  override def postStop = {
+    println("MPActor shutdown")
+  }
+}
+
+trait TimeX {
+  protected def timeX[A](f: => A, desc: String = "", onlySlow: Boolean = true, slowLimit: Long = 500) = {
+    val start = System.currentTimeMillis
+    val ret = f
+    val end = System.currentTimeMillis - start
+    if (!onlySlow || (onlySlow && end > slowLimit)) println(Thread.currentThread.getId + " " + desc + " Took " + end + "ms")
+    ret
+  }
+}
+
+class FastNLPProcessor(internStrings: Boolean = true, val system: ActorSystem) extends CoreNLPProcessor(internStrings) with TimeX {
   /**
    * One maltparser instance for each thread
    * MUST have one separate malt instance per thread!
    * malt uses a working directory which is written at runtime
    * using ThreadLocal variables guarantees that each thread gets its own working directory
    */
-  private val maltService = new ThreadLocal[MaltParserService]
 
+  // not used by Kadaxis
   override def parse(doc: Document) {
     val annotation = basicSanityCheck(doc)
     if (annotation.isEmpty) return
@@ -55,8 +108,20 @@ class FastNLPProcessor(internStrings: Boolean = true) extends CoreNLPProcessor(i
       throw new RuntimeException("ERROR: you have to run the lemmatizer before NER!")
 
     // parse each individual sentence
-    for (sentence <- doc.sentences) {
-      sentence.isPassive = parseSentenceForPassive(sentence)
+    for (sentence <- doc.sentences.par) {
+      sentence.isPassive = timeX(parseSentenceForPassive(sentence), "\t parseSentenceForPassive(sentence)")
+    }
+  }
+
+  implicit val timeout = Timeout(30 seconds)
+  private lazy val parserServiceActor = system.actorSelection("*user/MPServiceActors*")
+  def parseTokens(tokens: Array[String]) = {
+    val future = parserServiceActor ? tokens
+    try Await.result(future, 30 seconds).asInstanceOf[Array[String]]
+    catch {
+      case e: Throwable =>
+        println("\n\n\nHave mpServiceActors been started?\n\n\n")
+        throw e
     }
 
   }
@@ -69,7 +134,9 @@ class FastNLPProcessor(internStrings: Boolean = true) extends CoreNLPProcessor(i
     }
 
     // the actual parsing
-    val output = getService().parseTokens(tokens)
+    //val service = timeX(getService(), "getService")
+    //val output = timeX(service.parseTokens(tokens), "service.parseTokens(tokens)")
+    val output = timeX(parseTokens(tokens), "parseTokens(tokens)")
     for (o <- output) {
       val tokens = o.split("\\s+")
       if (tokens(7) == "NSUBJPASS") return true
@@ -86,7 +153,8 @@ class FastNLPProcessor(internStrings: Boolean = true) extends CoreNLPProcessor(i
     }
 
     // the actual parsing
-    val output = getService().parseTokens(tokens)
+    //val output = getService().parseTokens(tokens)
+    val output = parseTokens(tokens)
 
     // convert malt's output into our dependency graph
     val edgeBuffer = new ListBuffer[(Int, Int, String)]
@@ -110,41 +178,6 @@ class FastNLPProcessor(internStrings: Boolean = true) extends CoreNLPProcessor(i
     new DirectedGraph[String](edgeBuffer.toList, roots.toSet)
   }
 
-  private def getService(): MaltParserService = {
-    val args = mkArgs(
-      Files.mkTmpDir("maltwdir", deleteOnExit = true),
-      DEFAULT_MODEL_NAME)
-    //println(args)
-    //-m parse -w /var/folders/k3/qv4l1r1n7v90_6f4byk80m0h0000gn/T/maltwdir-1395273068683263000-581-0 -c nivreeager-en-crammer -v error
-    if (maltService.get() == null) {
-      val service = new maltparserx.MaltParserService()
-      service.initializeParserModel(args)
-      maltService.set(service)
-    }
-    maltService.get()
-  }
-
-  private def mkArgs(workDir: String, modelName: String): String = {
-    val args = new ArrayBuffer[String]()
-
-    args += "-m"
-    args += "parse"
-
-    args += "-w"
-    args += workDir
-
-    args += "-c"
-    args += modelName
-
-    args += "-v"
-    args += "error"
-
-    args.mkString(" ")
-  }
-
-  override def resolveCoreference(doc: Document) {
-    // FastNLP does not offer coreference resolution yet
-  }
 }
 
 object FastNLPProcessor {

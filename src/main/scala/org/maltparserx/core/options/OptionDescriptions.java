@@ -60,7 +60,8 @@ public class OptionDescriptions {
 	 * @return an option based on the option name and/or the option group name 
 	 * @throws MaltChainedException
 	 */
-	public Option getOption(String optiongroup, String optionname) throws MaltChainedException {		
+	public Option getOption(String optiongroup, String optionname) throws MaltChainedException {	
+		//System.out.println("====================> " + optiongroup + " " + optionname);
 		if (optionname == null || optionname.length() <= 0) {
 			throw new OptionException("The option name '"+optionname+"' cannot be found" ); 
 		}

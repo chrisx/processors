@@ -7,7 +7,7 @@ import java.util.Set;
 import java.util.SortedMap;
 import java.util.TreeMap;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
 import org.maltparserx.core.helper.HashMap;
 import org.maltparserx.core.exception.MaltChainedException;
 import org.maltparserx.core.io.dataformat.ColumnDescription;

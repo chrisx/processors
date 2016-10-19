@@ -2,18 +2,18 @@ package edu.arizona.sista.processors
 
 import org.scalatest.junit.AssertionsForJUnit
 import org.junit.Assert._
-import org.junit.{Before, Test}
+import org.junit.{ Before, Test }
 import collection.JavaConversions.asJavaCollection
 import edu.arizona.sista.processors.struct.Trees
 import edu.arizona.sista.processors.corenlp.CoreNLPProcessor
 
 /**
- * 
+ *
  * User: mihais
  * Date: 3/3/13
  */
 class TestCoreNLPProcessor extends AssertionsForJUnit {
-  var proc:Processor = null
+  var proc: Processor = null
 
   @Before def constructProcessor() {
     proc = new CoreNLPProcessor(internStrings = true)

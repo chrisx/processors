@@ -1,10 +1,11 @@
 package edu.arizona.sista.processors
 
 import org.scalatest.junit.AssertionsForJUnit
-import org.junit.{Test, Before}
+import org.junit.{ Test, Before }
 import org.junit.Assert._
 import edu.arizona.sista.processors.struct.DirectedGraphEdgeIterator
 import edu.arizona.sista.processors.fastnlp.FastNLPProcessor
+import akka.actor.ActorSystem
 
 /**
  *
@@ -12,10 +13,10 @@ import edu.arizona.sista.processors.fastnlp.FastNLPProcessor
  * Date: 1/7/14
  */
 class TestFastNLPProcessor extends AssertionsForJUnit {
-  var proc:Processor = null
+  var proc: Processor = null
 
   @Before def constructProcessor() {
-    proc = new FastNLPProcessor(internStrings = true)
+    proc = new FastNLPProcessor(internStrings = true, ActorSystem())
   }
 
   @Test def testParser1() {
@@ -30,7 +31,7 @@ class TestFastNLPProcessor extends AssertionsForJUnit {
     assertTrue(doc.sentences.head.dependencies.get.hasEdge(3, 4, "pobj"))
 
     val it = new DirectedGraphEdgeIterator[String](doc.sentences.head.dependencies.get)
-    while(it.hasNext) {
+    while (it.hasNext) {
       val d = it.next()
       println(d._1 + " " + d._2 + " " + d._3)
     }
@@ -46,7 +47,7 @@ class TestFastNLPProcessor extends AssertionsForJUnit {
     assertTrue(doc.sentences.head.dependencies.get.hasEdge(3, 2, "det"))
 
     val it = new DirectedGraphEdgeIterator[String](doc.sentences.head.dependencies.get)
-    while(it.hasNext) {
+    while (it.hasNext) {
       val d = it.next()
       println(d._1 + " " + d._2 + " " + d._3)
     }

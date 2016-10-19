@@ -1,6 +1,6 @@
 package org.maltparserx.core.config;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
 import org.maltparserx.core.exception.MaltChainedException;
 import org.maltparserx.core.symbol.SymbolTableHandler;
 

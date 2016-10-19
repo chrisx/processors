@@ -1,6 +1,6 @@
 package org.maltparserx.core.helper;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
 import org.maltparserx.core.exception.MaltChainedException;
 import org.maltparserx.core.io.dataformat.ColumnDescription;
 import org.maltparserx.core.options.OptionManager;

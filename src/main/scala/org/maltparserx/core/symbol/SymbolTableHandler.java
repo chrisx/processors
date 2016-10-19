@@ -4,7 +4,7 @@ import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.util.Set;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
 import org.maltparserx.core.exception.MaltChainedException;
 
 public interface SymbolTableHandler extends TableHandler {

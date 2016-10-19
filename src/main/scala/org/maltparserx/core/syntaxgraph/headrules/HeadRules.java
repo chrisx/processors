@@ -5,7 +5,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.URL;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
 import org.maltparserx.core.exception.MaltChainedException;
 import org.maltparserx.core.helper.HashMap;
 import org.maltparserx.core.helper.URLFinder;

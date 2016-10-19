@@ -2,7 +2,7 @@ package org.maltparserx.core.syntaxgraph.headrules;
 
 import java.util.ArrayList;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
 import org.maltparserx.core.exception.MaltChainedException;
 import org.maltparserx.core.io.dataformat.DataFormatInstance;
 import org.maltparserx.core.symbol.SymbolTable;
